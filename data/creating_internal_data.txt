@@ -1,0 +1,18 @@
+Training:
+Labels:
+# file_path w.r.t. images dir
+x y w h lx1 ly1 0. lx2 ly2 0. lx3 ly3 0. lx4 ly4 0. lx5 ly5 0. score
+xywh: int
+lx*, ly*: float
+
+If landmarks not available:
+x y w h -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 -1.0 score
+
+
+Images:
+store in a folder and add it to train folder
+
+Validation:
+Labels:
+# file_path w.r.t. images dir
+x y w h
