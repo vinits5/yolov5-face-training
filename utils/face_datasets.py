@@ -287,7 +287,24 @@ class LoadFaceImagesAndLabels(Dataset):  # for training/testing
 
         else:
             # Load image
-            img, (h0, w0), (h, w) = load_image(self, index)
+            orig_img, (h0, w0), (h, w) = load_image(self, index)
+
+            # Adding random gray-scale and blur (in 1/3 data)
+            if random.randrange(6) in [1,2]:
+                gray = cv2.cvtColor(orig_img, cv2.COLOR_BGR2GRAY)
+                img = np.zeros_like(orig_img)
+                img[:,:,0] = gray
+                img[:,:,1] = gray
+                img[:,:,2] = gray
+            else:
+                img = orig_img
+            
+            # Adding random noise (in 1/3 data)
+            if random.randrange(6) in [1,2]:
+                if random.randrange(2):
+                    img = cv2.GaussianBlur(img,(7,7),0)
+                else:
+                    img = cv2.medianBlur(img,5)
 
             # Letterbox
             shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
@@ -625,7 +642,7 @@ def random_perspective(img, targets=(), degrees=10, translate=.1, scale=.1, shea
     # Shear
     S = np.eye(3)
     S[0, 1] = math.tan(random.uniform(-shear, shear) * math.pi / 180)  # x shear (deg)
-    S[1, 0] = math.tan(random.uniform(-shear, shear) * math.pi / 180)  # y shear (deg)
+    # S[1, 0] = math.tan(random.uniform(-shear, shear) * math.pi / 180)  # y shear (deg)
 
     # Translation
     T = np.eye(3)
