@@ -32,4 +32,4 @@ flipud: 0.0  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 mosaic: 0.5  # image mosaic (probability)
 mixup: 0.0  # image mixup (probability)
-prob_aug: 1.0 # probability to apply rotation, shear, translate, scale.
+prob_aug: 0.5 # probability to apply rotation, shear, translate, scale.
