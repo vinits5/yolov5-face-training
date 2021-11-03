@@ -287,7 +287,10 @@ class LoadFaceImagesAndLabels(Dataset):  # for training/testing
 
         else:
             # Load image
-            orig_img, (h0, w0), (h, w) = load_image(self, index)
+            try:
+                orig_img, (h0, w0), (h, w) = load_image(self, index)
+            except:
+                import pdb; pdb.set_trace()
 
             # Adding random gray-scale and blur (in 1/3 data)
             if random.randrange(6) in [1,2]:
