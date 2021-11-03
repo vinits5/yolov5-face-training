@@ -347,12 +347,13 @@ class LoadFaceImagesAndLabels(Dataset):  # for training/testing
         if self.augment:
             # Augment imagespace
             if not mosaic:
-                img, labels = random_perspective(img, labels,
-                                                 degrees=hyp['degrees'],
-                                                 translate=hyp['translate'],
-                                                 scale=hyp['scale'],
-                                                 shear=hyp['shear'],
-                                                 perspective=hyp['perspective'])
+                if random.uniform(0, 1) < hyp['prob_aug']:
+                    img, labels = random_perspective(img, labels,
+                                                    degrees=hyp['degrees'],
+                                                    translate=hyp['translate'],
+                                                    scale=hyp['scale'],
+                                                    shear=hyp['shear'],
+                                                    perspective=hyp['perspective'])
 
             # Augment colorspace
             augment_hsv(img, hgain=hyp['hsv_h'], sgain=hyp['hsv_s'], vgain=hyp['hsv_v'])
