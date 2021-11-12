@@ -1,7 +1,7 @@
 import os
 from tqdm import tqdm
 
-root_dir = '/home/oem/vinit/FaceDetection/yolov5/yolov5-face/data/widerface/face-detection-internal-dataset/version2/train'
+root_dir = '/home/oem/vinit/FaceDetection/yolov5/face-detection-internal-dataset/version2/train'
 
 img_names_dir = os.path.join(root_dir, 'imgs.txt')
 labels_dir = os.path.join(root_dir, 'new_labels2.txt')
@@ -46,8 +46,8 @@ for dd in data:
 
         # Add lx and ly and separate them with 0.0
         for i in range(5):
-            annotation += str(float(dd[4+i])) + " "
-            annotation += str(float(dd[4+i+1])) + " "
+            annotation += str(float(dd[4+2*i])) + " "
+            annotation += str(float(dd[4+2*i+1])) + " "
             if float(dd[4+i]) == -1.0:
                 annotation += str(-1.0) + " "
             else:
