@@ -5,6 +5,7 @@ import torch
 import torch.utils.data as data
 import cv2
 import numpy as np
+from tqdm import tqdm
 
 class WiderFaceDetection(data.Dataset):
     def __init__(self, txt_path, preproc=None):
@@ -105,8 +106,7 @@ save_path = 'data/widerface/train'
 save_path = os.path.join(BASE_PATH, save_path)
 
 aa=WiderFaceDetection(os.path.join(BASE_PATH, "data/widerface/widerface/train/combined_label.txt"))
-for i in range(len(aa.imgs_path)):
-    print(i, aa.imgs_path[i])
+for i in tqdm(range(len(aa.imgs_path))):
     img = cv2.imread(aa.imgs_path[i])
     base_img = os.path.basename(aa.imgs_path[i])
     base_txt = os.path.basename(aa.imgs_path[i])[:-4] +".txt"
