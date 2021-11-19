@@ -1,5 +1,7 @@
+data/widerface/train*
 data/widerface/widerface/train/images
 data/widerface/widerface/val/images
+data/widerface/widerface/train/combined_label_old.txt
 data/widerface/train
 data/widerface/val
 data/widerface/train.cache
