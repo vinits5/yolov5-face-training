@@ -344,6 +344,8 @@ class LoadFaceImagesAndLabels(Dataset):  # for training/testing
                 labels[:, 14] = np.array(x[:, 14] > 0, dtype=np.int32) * (ratio[1] * h * x[:, 14] + pad[1]) + (
                     np.array(x[:, 14] > 0, dtype=np.int32) - 1)
 
+            img, labels, cropped = _crop(img, labels)
+
         if self.augment:
             # Augment imagespace
             if not mosaic:
@@ -850,3 +852,89 @@ def autosplit(path='../coco128', weights=(0.9, 0.1, 0.0)):  # from utils.dataset
         if img.suffix[1:] in img_formats:
             with open(path / txt[i], 'a') as f:
                 f.write(str(img) + '\n')  # add image to txt file
+
+
+# Crop augmentation added from https://github.com/biubug6/Pytorch_Retinaface
+def matrix_iof(a, b):
+    """
+    return iof of a and b, numpy version for data augenmentation
+    """
+    lt = np.maximum(a[:, np.newaxis, :2], b[:, :2])
+    rb = np.minimum(a[:, np.newaxis, 2:], b[:, 2:])
+
+    area_i = np.prod(rb - lt, axis=2) * (lt < rb).all(axis=2)
+    area_a = np.prod(a[:, 2:] - a[:, :2], axis=1)
+    return area_i / np.maximum(area_a[:, np.newaxis], 1)
+
+def _crop(image, targets, img_dim=800):
+    boxes = targets[:, 1:5].copy()
+    landm = targets[:, 5:].copy()
+    height, width, _ = image.shape
+    pad_image_flag = True
+
+    for _ in range(250):
+        """
+        if random.uniform(0, 1) <= 0.2:
+            scale = 1.0
+        else:
+            scale = random.uniform(0.3, 1.0)
+        """
+        PRE_SCALES = [0.3, 0.45, 0.6, 0.8, 1.0]
+        scale = random.choice(PRE_SCALES)
+        short_side = min(width, height)
+        w = int(scale * short_side)
+        h = w
+
+        if width == w:
+            l = 0
+        else:
+            l = random.randrange(width - w)
+        if height == h:
+            t = 0
+        else:
+            t = random.randrange(height - h)
+        roi = np.array((l, t, l + w, t + h))
+
+        value = matrix_iof(boxes, roi[np.newaxis])
+        flag = (value >= 1)
+        if not flag.any():
+            continue
+
+        centers = (boxes[:, :2] + boxes[:, 2:]) / 2
+        mask_a = np.logical_and(roi[:2] < centers, centers < roi[2:]).all(axis=1)
+        boxes_t = boxes[mask_a].copy()
+        landms_t = landm[mask_a].copy()
+        landms_t = landms_t.reshape([-1, 5, 2])
+
+        if boxes_t.shape[0] == 0:
+            continue
+
+        image_t = image[roi[1]:roi[3], roi[0]:roi[2]]
+
+        boxes_t[:, :2] = np.maximum(boxes_t[:, :2], roi[:2])
+        boxes_t[:, :2] -= roi[:2]
+        boxes_t[:, 2:] = np.minimum(boxes_t[:, 2:], roi[2:])
+        boxes_t[:, 2:] -= roi[:2]
+
+        # landm
+        landms_t[:, :, :2] = landms_t[:, :, :2] - roi[:2]
+        landms_t[:, :, :2] = np.maximum(landms_t[:, :, :2], np.array([0, 0]))
+        landms_t[:, :, :2] = np.minimum(landms_t[:, :, :2], roi[2:] - roi[:2])
+        landms_t = landms_t.reshape([-1, 10])
+
+
+        # make sure that the cropped image contains at least one face > 16 pixel at training image scale
+        b_w_t = (boxes_t[:, 2] - boxes_t[:, 0] + 1) / w * img_dim
+        b_h_t = (boxes_t[:, 3] - boxes_t[:, 1] + 1) / h * img_dim
+        mask_b = np.minimum(b_w_t, b_h_t) > 0.0
+        boxes_t = boxes_t[mask_b]
+        landms_t = landms_t[mask_b]
+
+        if boxes_t.shape[0] == 0:
+            continue
+
+        pad_image_flag = False
+        targets_t = np.hstack((np.zeros((landms_t.shape[0], 1)), boxes_t, landms_t))
+
+        return image_t, targets_t, pad_image_flag
+    return image, targets, pad_image_flag
