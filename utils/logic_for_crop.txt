@@ -1,0 +1,22 @@
+1) 250 times
+	
+	1) scale = randomly select from [0.3, 0.45, 0.6, 0.8, 1.0]
+	2) short_side = short side of original image
+	3) w, h = short side * scale = 0.3 x short_side upto short_side
+	4) l = 0 to (width - w)
+	5) t = 0 to (height - h)
+	6) roi = [l, t, l + w, h + t] # Always square
+	7) IoF = (Area of intersection of pred bbox and gt bbox) / (Area of pred bbox)
+	8) value [nx1] = [IoFs of bboxes and gts]
+		>> lt [nx1x2], rb [nx1x2], area_i [nx1], area_a [nx1]
+	9) flag = Boolean array which is true where IoF of bbox is 1
+	10) If no True in flag array, then skip following steps
+	11) Select those bboxes, landms, where center of original bboxes is inside new RoIs
+	12) If no such bbox found then continue
+	13) !!! BBox and Landmarks !!!
+			are being limited to the RoI of crop
+			due to which the gt always remains inside RoI
+			and the model might not get correct gt for cropped faces
+		!!! 
+	14) Check if any face is greater than 0x0 pixels, if not then continue
+	15) Return if any found
