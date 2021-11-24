@@ -306,45 +306,116 @@ class LoadFaceImagesAndLabels(Dataset):  # for training/testing
                 else:
                     img = cv2.medianBlur(img,5)
 
+            x = self.labels[index]
+            if x.size > 0:
+                # Normalized xywh to pixel xyxy format
+                labels = x.copy()
+
+                labels[:, 1] = w * (x[:, 1] - x[:, 3] / 2)# + pad[0]  # pad width
+                labels[:, 2] = h * (x[:, 2] - x[:, 4] / 2)# + pad[1]  # pad height
+                labels[:, 3] = w * (x[:, 1] + x[:, 3] / 2)# + pad[0]
+                labels[:, 4] = h * (x[:, 2] + x[:, 4] / 2)# + pad[1]
+
+                #labels[:, 5] = ratio[0] * w * x[:, 5] + pad[0]  # pad width
+                labels[:, 5] = np.array(x[:, 5] > 0, dtype=np.int32) * (w * x[:, 5]) + (
+                    np.array(x[:, 5] > 0, dtype=np.int32) - 1)
+                labels[:, 6] = np.array(x[:, 6] > 0, dtype=np.int32) * (h * x[:, 6]) + (
+                    np.array(x[:, 6] > 0, dtype=np.int32) - 1)
+                labels[:, 7] = np.array(x[:, 7] > 0, dtype=np.int32) * (w * x[:, 7]) + (
+                    np.array(x[:, 7] > 0, dtype=np.int32) - 1)
+                labels[:, 8] = np.array(x[:, 8] > 0, dtype=np.int32) * (h * x[:, 8]) + (
+                    np.array(x[:, 8] > 0, dtype=np.int32) - 1)
+                labels[:, 9] = np.array(x[:, 5] > 0, dtype=np.int32) * (w * x[:, 9]) + (
+                    np.array(x[:, 9] > 0, dtype=np.int32) - 1)
+                labels[:, 10] = np.array(x[:, 5] > 0, dtype=np.int32) * (h * x[:, 10]) + (
+                    np.array(x[:, 10] > 0, dtype=np.int32) - 1)
+                labels[:, 11] = np.array(x[:, 11] > 0, dtype=np.int32) * (w * x[:, 11]) + (
+                    np.array(x[:, 11] > 0, dtype=np.int32) - 1)
+                labels[:, 12] = np.array(x[:, 12] > 0, dtype=np.int32) * (h * x[:, 12]) + (
+                    np.array(x[:, 12] > 0, dtype=np.int32) - 1)
+                labels[:, 13] = np.array(x[:, 13] > 0, dtype=np.int32) * (w * x[:, 13]) + (
+                    np.array(x[:, 13] > 0, dtype=np.int32) - 1)
+                labels[:, 14] = np.array(x[:, 14] > 0, dtype=np.int32) * (h * x[:, 14]) + (
+                    np.array(x[:, 14] > 0, dtype=np.int32) - 1)            
+
+            img, labels, cropped = _crop(img, labels)
+            h, w, _ = img.shape
+
+            if labels.size > 0 and True:
+                labels[:, 3] = (labels[:, 3] - labels[:, 1])        # width = x2 - x1
+                labels[:, 4] = (labels[:, 4] - labels[:, 2])        # height = y2 - y1
+                labels[:, 1] = (labels[:, 1] + labels[:, 3] / 2)    # cx = x1 + width / 2
+                labels[:, 2] = (labels[:, 2] + labels[:, 4] / 2)    # cy = y2 + height / 2
+                labels[:, 3] /= w
+                labels[:, 4] /= h
+                labels[:, 1] /= w
+                labels[:, 2] /= h
+
+                #labels[:, 5] = ratio[0] * w * labels[:, 5] + pad[0]  # pad width
+                labels[:, 5] = np.array(labels[:, 5] > 0, dtype=np.int32) * (labels[:, 5] / w) + (
+                    np.array(labels[:, 5] > 0, dtype=np.int32) - 1)
+                labels[:, 6] = np.array(labels[:, 6] > 0, dtype=np.int32) * (labels[:, 6] / h) + (
+                    np.array(labels[:, 6] > 0, dtype=np.int32) - 1)
+                labels[:, 7] = np.array(labels[:, 7] > 0, dtype=np.int32) * (labels[:, 7] / w) + (
+                    np.array(labels[:, 7] > 0, dtype=np.int32) - 1)
+                labels[:, 8] = np.array(labels[:, 8] > 0, dtype=np.int32) * (labels[:, 8] / h) + (
+                    np.array(labels[:, 8] > 0, dtype=np.int32) - 1)
+                labels[:, 9] = np.array(labels[:, 5] > 0, dtype=np.int32) * (labels[:, 9] / w) + (
+                    np.array(labels[:, 9] > 0, dtype=np.int32) - 1)
+                labels[:, 10] = np.array(labels[:, 5] > 0, dtype=np.int32) * (labels[:, 10] / h) + (
+                    np.array(labels[:, 10] > 0, dtype=np.int32) - 1)
+                labels[:, 11] = np.array(labels[:, 11] > 0, dtype=np.int32) * (labels[:, 11] / w) + (
+                    np.array(labels[:, 11] > 0, dtype=np.int32) - 1)
+                labels[:, 12] = np.array(labels[:, 12] > 0, dtype=np.int32) * (labels[:, 12] / h) + (
+                    np.array(labels[:, 12] > 0, dtype=np.int32) - 1)
+                labels[:, 13] = np.array(labels[:, 13] > 0, dtype=np.int32) * (labels[:, 13] / w) + (
+                    np.array(labels[:, 13] > 0, dtype=np.int32) - 1)
+                labels[:, 14] = np.array(labels[:, 14] > 0, dtype=np.int32) * (labels[:, 14] / h) + (
+                    np.array(labels[:, 14] > 0, dtype=np.int32) - 1)
+            
+
             # Letterbox
             shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
             img, ratio, pad = letterbox(img, shape, auto=False, scaleup=self.augment)
             shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
 
-            # Load labels
-            labels = []
-            x = self.labels[index]
-            if x.size > 0:
-                # Normalized xywh to pixel xyxy format
-                labels = x.copy()
-                labels[:, 1] = ratio[0] * w * (x[:, 1] - x[:, 3] / 2) + pad[0]  # pad width
-                labels[:, 2] = ratio[1] * h * (x[:, 2] - x[:, 4] / 2) + pad[1]  # pad height
-                labels[:, 3] = ratio[0] * w * (x[:, 1] + x[:, 3] / 2) + pad[0]
-                labels[:, 4] = ratio[1] * h * (x[:, 2] + x[:, 4] / 2) + pad[1]
+            if labels.size > 0:
+                labels[:, 1] = (labels[:, 1] - labels[:, 3] / 2)        # x1 = cx - width / 2
+                labels[:, 2] = (labels[:, 2] - labels[:, 4] / 2)        # y1 = cy - height / 2
+                labels[:, 3] = (labels[:, 1] + labels[:, 3])            # x2 = x1 + width
+                labels[:, 4] = (labels[:, 2] + labels[:, 4])            # y2 = y1 + height
 
-                #labels[:, 5] = ratio[0] * w * x[:, 5] + pad[0]  # pad width
-                labels[:, 5] = np.array(x[:, 5] > 0, dtype=np.int32) * (ratio[0] * w * x[:, 5] + pad[0]) + (
-                    np.array(x[:, 5] > 0, dtype=np.int32) - 1)
-                labels[:, 6] = np.array(x[:, 6] > 0, dtype=np.int32) * (ratio[1] * h * x[:, 6] + pad[1]) + (
-                    np.array(x[:, 6] > 0, dtype=np.int32) - 1)
-                labels[:, 7] = np.array(x[:, 7] > 0, dtype=np.int32) * (ratio[0] * w * x[:, 7] + pad[0]) + (
-                    np.array(x[:, 7] > 0, dtype=np.int32) - 1)
-                labels[:, 8] = np.array(x[:, 8] > 0, dtype=np.int32) * (ratio[1] * h * x[:, 8] + pad[1]) + (
-                    np.array(x[:, 8] > 0, dtype=np.int32) - 1)
-                labels[:, 9] = np.array(x[:, 5] > 0, dtype=np.int32) * (ratio[0] * w * x[:, 9] + pad[0]) + (
-                    np.array(x[:, 9] > 0, dtype=np.int32) - 1)
-                labels[:, 10] = np.array(x[:, 5] > 0, dtype=np.int32) * (ratio[1] * h * x[:, 10] + pad[1]) + (
-                    np.array(x[:, 10] > 0, dtype=np.int32) - 1)
-                labels[:, 11] = np.array(x[:, 11] > 0, dtype=np.int32) * (ratio[0] * w * x[:, 11] + pad[0]) + (
-                    np.array(x[:, 11] > 0, dtype=np.int32) - 1)
-                labels[:, 12] = np.array(x[:, 12] > 0, dtype=np.int32) * (ratio[1] * h * x[:, 12] + pad[1]) + (
-                    np.array(x[:, 12] > 0, dtype=np.int32) - 1)
-                labels[:, 13] = np.array(x[:, 13] > 0, dtype=np.int32) * (ratio[0] * w * x[:, 13] + pad[0]) + (
-                    np.array(x[:, 13] > 0, dtype=np.int32) - 1)
-                labels[:, 14] = np.array(x[:, 14] > 0, dtype=np.int32) * (ratio[1] * h * x[:, 14] + pad[1]) + (
-                    np.array(x[:, 14] > 0, dtype=np.int32) - 1)
+                labels[:, 1] *= ratio[0] * w
+                labels[:, 2] *= ratio[1] * h
+                labels[:, 3] *= ratio[0] * w
+                labels[:, 4] *= ratio[1] * h
 
-            img, labels, cropped = _crop(img, labels)
+                labels[:, 1] += pad[0]
+                labels[:, 2] += pad[1]
+                labels[:, 3] += pad[0]
+                labels[:, 4] += pad[1]
+
+                labels[:, 5] = np.array(labels[:, 5] > 0, dtype=np.int32) * (ratio[0] * w * labels[:, 5] + pad[0]) + (
+                    np.array(labels[:, 5] > 0, dtype=np.int32) - 1)
+                labels[:, 6] = np.array(labels[:, 6] > 0, dtype=np.int32) * (ratio[1] * h * labels[:, 6] + pad[1]) + (
+                    np.array(labels[:, 6] > 0, dtype=np.int32) - 1)
+                labels[:, 7] = np.array(labels[:, 7] > 0, dtype=np.int32) * (ratio[0] * w * labels[:, 7] + pad[0]) + (
+                    np.array(labels[:, 7] > 0, dtype=np.int32) - 1)
+                labels[:, 8] = np.array(labels[:, 8] > 0, dtype=np.int32) * (ratio[1] * h * labels[:, 8] + pad[1]) + (
+                    np.array(labels[:, 8] > 0, dtype=np.int32) - 1)
+                labels[:, 9] = np.array(labels[:, 5] > 0, dtype=np.int32) * (ratio[0] * w * labels[:, 9] + pad[0]) + (
+                    np.array(labels[:, 9] > 0, dtype=np.int32) - 1)
+                labels[:, 10] = np.array(labels[:, 5] > 0, dtype=np.int32) * (ratio[1] * h * labels[:, 10] + pad[1]) + (
+                    np.array(labels[:, 10] > 0, dtype=np.int32) - 1)
+                labels[:, 11] = np.array(labels[:, 11] > 0, dtype=np.int32) * (ratio[0] * w * labels[:, 11] + pad[0]) + (
+                    np.array(labels[:, 11] > 0, dtype=np.int32) - 1)
+                labels[:, 12] = np.array(labels[:, 12] > 0, dtype=np.int32) * (ratio[1] * h * labels[:, 12] + pad[1]) + (
+                    np.array(labels[:, 12] > 0, dtype=np.int32) - 1)
+                labels[:, 13] = np.array(labels[:, 13] > 0, dtype=np.int32) * (ratio[0] * w * labels[:, 13] + pad[0]) + (
+                    np.array(labels[:, 13] > 0, dtype=np.int32) - 1)
+                labels[:, 14] = np.array(labels[:, 14] > 0, dtype=np.int32) * (ratio[1] * h * labels[:, 14] + pad[1]) + (
+                    np.array(labels[:, 14] > 0, dtype=np.int32) - 1)
+
 
         if self.augment:
             # Augment imagespace
