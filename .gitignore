@@ -6,4 +6,4 @@ data/widerface/train
 data/widerface/val
 data/widerface/train.cache
 __pycache__
-runs
+runs*
