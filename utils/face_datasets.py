@@ -950,7 +950,7 @@ def _crop(image, targets, img_dim=800):
         else:
             scale = random.uniform(0.3, 1.0)
         """
-        PRE_SCALES = [0.3, 0.45, 0.6, 0.8, 1.0]
+        PRE_SCALES = [0.1, 0.3, 0.45, 0.6, 0.8, 1.0]
         scale = random.choice(PRE_SCALES)
         short_side = min(width, height)
         w = int(scale * short_side)
