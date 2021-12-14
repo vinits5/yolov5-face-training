@@ -7,3 +7,4 @@ data/widerface/val
 data/widerface/train.cache
 __pycache__
 runs*
+data_dump*

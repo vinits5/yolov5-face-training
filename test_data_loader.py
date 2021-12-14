@@ -25,7 +25,7 @@ import test  # import test.py to get mAP after each epoch
 from models.experimental import attempt_load
 from models.yolo import Model
 from utils.autoanchor import check_anchors
-from utils.face_datasets import create_dataloader, LoadFaceImagesAndLabels
+from utils.face_datasets_with_face_crop import create_dataloader, LoadFaceImagesAndLabels
 from utils.general import labels_to_class_weights, increment_path, labels_to_image_weights, init_seeds, \
     fitness, strip_optimizer, get_latest_run, check_dataset, check_file, check_git_status, check_img_size, \
     print_mutation, set_logging
@@ -44,15 +44,26 @@ def showlabels(img, targets):
     img = cv2.imread('img.png')
     boxs = boxs.numpy()
     landmarks = landmarks.numpy()
+    file = open('image_bbox.txt', 'w')
     for box in boxs:
-        x,y,w,h = box[0] * img.shape[1], box[1] * img.shape[0], box[2] * img.shape[1], box[3] * img.shape[0]
+        x,y,w,h = box[0] * img.shape[1], box[1] * img.shape[0], box[2] * img.shape[1], box[3] * img.shape[0]        
+        file.write(str(int(x - w/2))+' '+str(int(y - h/2))+' '+str(int(x + w/2))+' '+str(int(y + h/2))+'\n')
         #cv2.rectangle(image, (x,y), (x+w,y+h), (0,255,0), 2)
         cv2.rectangle(img, (int(x - w/2), int(y - h/2)), (int(x + w/2), int(y + h/2)), (0, 255, 0), 2)
+    file.close()
+    file = open('image_landmarks.txt','w')
 
     for landmark in landmarks:
         #cv2.circle(img,(60,60),30,(0,0,255))
+        lm_txt = ''
         for i in range(5):
             cv2.circle(img, (int(landmark[2*i] * img.shape[1]), int(landmark[2*i+1]*img.shape[0])), 3 ,(0,0,255), -1)
+            lm_txt += str(int(landmark[2*i] * img.shape[1])) + ' '
+            lm_txt += str(int(landmark[2*i+1] * img.shape[0])) + ' '
+        lm_txt += '\n'
+        file.write(lm_txt)
+    file.close()
+        
     # cv2.imshow('test', img)
     # cv2.waitKey(0)
     # plt.imshow(img[:,:,::-1])
@@ -138,12 +149,15 @@ if __name__ == '__main__':
                                     )
 
     # for i in range(len(dataset)):
-    # for i in range(len(dataset.img_files)):
-    #     if 'FaceDetect_' in dataset.img_files[i]:
-    #         data = dataset[i]
-    #         if data[-1] == True:
-    #             showlabels(data[0], data[1])
-    #             import pdb; pdb.set_trace()
+    from tqdm import tqdm
+    for i in tqdm(range(len(dataset.img_files))):
+        # if 'FaceDetect_' in dataset.img_files[i]:
+            data = dataset[i]
+            # print(i, end='')
+            if data[-1] == True:
+                # print(data[0], data[1])
+                # showlabels(data[0], data[1])
+                # import pdb; pdb.set_trace()
 
-    data = dataset[0]
-    showlabels(data[0], data[1])
+    # data = dataset[221]
+    # showlabels(data[0], data[1])
