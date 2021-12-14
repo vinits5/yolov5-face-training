@@ -552,7 +552,7 @@ class LoadFaceImagesAndLabels(Dataset):  # for training/testing
         #print(index, '   --- labels_out: ', labels_out)
         #if nL:
             #print( ' : landmarks : ', torch.max(labels_out[:, 5:15]), '  ---   ', torch.min(labels_out[:, 5:15]))
-        return torch.from_numpy(img), labels_out, self.img_files[index], cropped
+        return torch.from_numpy(img), labels_out, self.img_files[index], shapes
 
     @staticmethod
     def collate_fn(batch):
